@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Order Management System</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Orders</h1>
+
+        <div class="row">
+            <div class="col-md-8">
+                <h2>Order List</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer Name</th>
+                            <th>Status</th>
+                            <th>Total Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderList">
+                        <!-- Orders will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <h2>Create New Order</h2>
+                <form id="createOrderForm">
+                    <div class="mb-3">
+                        <label for="customerName" class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="customerName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" required>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="totalPrice" class="form-label">Total Price</label>
+                        <input type="number" class="form-control" id="totalPrice" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Fetch orders and populate the table
+        function fetchOrders() {
+            axios.get('/api/orders/')
+                .then(response => {
+                    const orderList = document.getElementById('orderList');
+                    orderList.innerHTML = '';
+                    response.data.forEach(order => {
+                        orderList.innerHTML += `
+                            <tr>
+                                <td>${order.order_id}</td>
+                                <td>${order.customer_name}</td>
+                                <td>${order.status}</td>
+                                <td>$${order.total_price.toFixed(2)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" onclick="editOrder(${order.order_id})">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteOrder(${order.order_id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error fetching orders:', error));
+        }
+
+        // Create a new order
+        document.getElementById('createOrderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const orderData = {
+                customer_name: document.getElementById('customerName').value,
+                status: document.getElementById('status').value,
+                total_price: parseFloat(document.getElementById('totalPrice').value)
+            };
+            axios.post('/api/orders/', orderData)
+                .then(response => {
+                    console.log('Order created:', response.data);
+                    fetchOrders();
+                    this.reset();
+                })
+                .catch(error => console.error('Error creating order:', error));
+        });
+
+        // Edit an order (you would implement this function)
+        function editOrder(orderId) {
+            console.log('Edit order:', orderId);
+            // Implement edit functionality
+        }
+
+        // Delete an order
+        function deleteOrder(orderId) {
+            if (confirm('Are you sure you want to delete this order?')) {
+                axios.delete(`/api/orders/${orderId}/`)
+                    .then(response => {
+                        console.log('Order deleted:', response.data);
+                        fetchOrders();
+                    })
+                    .catch(error => console.error('Error deleting order:', error));
+            }
+        }
+
+        // Initial fetch of orders
+        fetchOrders();
+    </script>
+</body>
+</html>
+
